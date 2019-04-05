@@ -13,6 +13,8 @@
   "dependencies": {
     "chalk": "^2.4.2",
     "ember-data-rfc395-data": "github:ember-data/ember-data-rfc395-data",
+    "execa": "^1.0.0",
+    "glob": "^7.1.3",
     "jscodeshift": "^0.3.29"
   },
   "devDependencies": {

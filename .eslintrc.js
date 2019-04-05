@@ -13,6 +13,14 @@ module.exports = {
   },
   overrides: [
     {
+      files: ['bin/**/*.js'],
+
+      rules: {
+        'no-console': ['off'],
+        'no-process-exit': ['off']
+      },
+    },
+    {
       files: ['__tests__/*.test.js'],
       plugins: ['jest'],
 
