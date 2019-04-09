@@ -3,7 +3,7 @@
 const fs = require('fs');
 const MAPPINGS = require('ember-data-rfc395-data');
 
-const LOG_FILE = 'ember-modules-codemod.tmp.' + process.pid;
+const LOG_FILE = 'ember-data-codemod.tmp.' + process.pid;
 const ERROR_WARNING = 1;
 const MISSING_GLOBAL_WARNING = 2;
 
@@ -11,14 +11,12 @@ const OPTS = {
   quote: 'single'
 };
 
-const EMBER_NAMESPACES = ['computed', 'inject'];
-
 module.exports = transform;
 
 /**
  * This is the entry point for this jscodeshift transform.
- * It scans JavaScript files that use the Ember global and updates
- * them to use the module syntax from the proposed new RFC.
+ * It scans JavaScript files that use the DS global and / or the old imports.
+ * It updates them to use the module syntax from the proposed new RFC.
  */
 function transform(file, api /*, options*/) {
   let source = file.source;
@@ -26,7 +24,7 @@ function transform(file, api /*, options*/) {
 
   let root = j(source);
 
-  // Track any use of `Ember.*` that isn't accounted for in the mapping. We'll
+  // Track any use of `DS.*` that isn't accounted for in the mapping. We'll
   // use this at the end to generate a report.
   let warnings = [];
 
@@ -40,65 +38,43 @@ function transform(file, api /*, options*/) {
     // exports and named exports into one line if necessary.
     let modules = findExistingModules(root);
 
-    // Build a data structure that tells us how to map properties on the Ember
+    // Build a data structure that tells us how to map properties on the DS
     // global into the module syntax.
     let mappings = buildMappings(modules);
 
-    let globalEmber = getGlobalEmberName(root);
+    let globalDS = getGlobalDSName(root);
 
-    // find all usages of namespaces like `computed.alias`
-    // we have to do it here before `findGlobalEmberAliases`, as this might remove namespace destructurings like
-    // `const { computed } = Ember` as `Ember.computed` is both a valid function with a named module import as well as
-    // a namespace. And we need to check those variable declarations to prevent false positives
-    let namespaces = EMBER_NAMESPACES;
-    let namespaceUsages = EMBER_NAMESPACES.map(namespace => ({
-      namespace,
-      usages: findNamespaceUsage(root, globalEmber, namespace)
-    }));
+    // Discover global aliases for DS keys that are introduced via destructuring,
+    // e.g. `const { Model } = DS;`.
+    let globalAliases = findGlobalDSAliases(root, globalDS, mappings);
 
-    // Discover global aliases for Ember keys that are introduced via destructuring,
-    // e.g. `const { String: { underscore } } = Ember;`.
-    let globalAliases = findGlobalEmberAliases(root, globalEmber, mappings);
-
-    // Go through all of the tracked pending Ember globals. The ones that have
+    // Go through all of the tracked pending DS globals. The ones that have
     // been marked as missing should be added to the warnings.
     resolvePendingGlobals();
 
     // Resolve the discovered aliases against the module registry. We intentionally do
-    // this ahead of finding replacements for e.g. `Ember.String.underscore` usage in
+    // this ahead of finding replacements for e.g. `DS.Model` usage in
     // order to reuse custom names for any fields referenced both ways.
     resolveAliasImports(globalAliases, mappings, modules, root);
 
-    // Scan the source code, looking for any instances of the `Ember` identifier
+    // Scan the source code, looking for any instances of the `DS` identifier
     // used as the root of a property lookup. If they match one of the provided
     // mappings, save it off for replacement later.
-    let replacements = findUsageOfEmberGlobal(root, globalEmber).map(
+    let replacements = findUsageOfDSGlobal(root, globalDS).map(
       findReplacement(mappings)
     );
-    // add the already found namespace replacements to our replacement array
-    for (let ns of namespaceUsages) {
-      let namespaceReplacements = ns.usages.map(
-        findReplacement(mappings, ns.namespace)
-      );
-
-      replacements = replacements.concat(namespaceReplacements);
-    }
 
     // Now that we've identified all of the replacements that we need to do, we'll
     // make sure to either add new `import` declarations, or update existing ones
     // to add new named exports or the default export.
     updateOrCreateImportDeclarations(root, modules);
 
-    // Actually go through and replace each usage of `Ember.whatever` with the
+    // Actually go through and replace each usage of `DS.whatever` with the
     // imported binding (`whatever`).
     applyReplacements(replacements);
 
-    // findGlobalEmberAliases might have removed destructured namespaces that are also valid functions themselves
-    // like `Ember.computed`. But other namespaces like `Ember.inject` might have been left over, so remove them here
-    removeNamespaces(root, globalEmber, namespaces);
-
-    // Finally remove global Ember import if no globals left
-    removeGlobalEmber(root, globalEmber);
+    // Finally remove global DS import if no globals left
+    removeGlobalDS(root, globalDS);
 
     // jscodeshift is not so great about giving us control over the resulting whitespace.
     // We'll use a regular expression to try to improve the situation (courtesy of @rwjblue).
@@ -108,7 +84,7 @@ function transform(file, api /*, options*/) {
       root.toSource(Object.assign({}, OPTS, { lineTerminator }))
     );
   } catch (e) {
-    if (process.env.EMBER_MODULES_CODEMOD) {
+    if (process.env.EMBER_DATA_CODEMOD) {
       warnings.push([ERROR_WARNING, file.path, source, e.stack]);
     }
 
@@ -118,7 +94,7 @@ function transform(file, api /*, options*/) {
     // We only do this if invoked via the CLI tool, not jscodeshift directly,
     // because jscodeshift doesn't give us a cleanup hook when everything is done
     // to parse these files. (This is what the environment variable is checking.)
-    if (warnings.length && process.env.EMBER_MODULES_CODEMOD) {
+    if (warnings.length && process.env.EMBER_DATA_CODEMOD) {
       warnings.forEach(warning => {
         fs.appendFileSync(LOG_FILE, JSON.stringify(warning) + '\n');
       });
@@ -137,7 +113,7 @@ function transform(file, api /*, options*/) {
 
     for (let mapping of MAPPINGS) {
       if (!mapping.deprecated) {
-        mappings[mapping.global.substr('Ember.'.length)] = new Mapping(
+        mappings[mapping.global.substr('DS.'.length)] = new Mapping(
           mapping,
           registry
         );
@@ -147,7 +123,7 @@ function transform(file, api /*, options*/) {
     return mappings;
   }
 
-  function getGlobalEmberImport(root) {
+  function getGlobalDSImport(root) {
     return root.find(j.ImportDeclaration, {
       specifiers: [
         {
@@ -155,46 +131,46 @@ function transform(file, api /*, options*/) {
         }
       ],
       source: {
-        value: 'ember'
+        value: 'ember-data'
       }
     });
   }
 
-  function getGlobalEmberName(root) {
-    const globalEmber = getGlobalEmberImport(root);
+  function getGlobalDSName(root) {
+    const globalDS = getGlobalDSImport(root);
 
-    let defaultImport = globalEmber.find(j.Identifier);
+    let defaultImport = globalDS.find(j.Identifier);
     let defaultMemberName =
       defaultImport.size() && defaultImport.get(0).node.name;
 
-    return defaultMemberName || 'Ember';
+    return defaultMemberName || 'DS';
   }
 
   /*
-   * Finds all uses of a property looked up on the Ember global (i.e.,
-   * `Ember.something`). Makes sure that it is actually the Ember global
-   * and not another variable that happens to be called `Ember`.
+   * Finds all uses of a property looked up on the DS global (i.e.,
+   * `DS.something`). Makes sure that it is actually the DS global
+   * and not another variable that happens to be called `DS`.
    */
-  function findUsageOfEmberGlobal(root, globalEmber) {
-    let emberUsages = root.find(j.MemberExpression, {
+  function findUsageOfDSGlobal(root, globalDS) {
+    let dsUsages = root.find(j.MemberExpression, {
       object: {
-        name: globalEmber
+        name: globalDS
       }
     });
 
-    return emberUsages.filter(isEmberGlobal(globalEmber)).paths();
+    return dsUsages.filter(isDSGlobal(globalDS)).paths();
   }
 
-  // Find destructured global aliases for fields on the Ember global
-  function findGlobalEmberAliases(root, globalEmber, mappings) {
+  // Find destructured global aliases for fields on the DS global
+  function findGlobalDSAliases(root, globalDS, mappings) {
     let aliases = {};
-    let assignments = findUsageOfDestructuredEmber(root, globalEmber);
+    let assignments = findUsageOfDestructuredDS(root, globalDS);
     for (let assignment of assignments) {
-      let emberPath = joinEmberPath(assignment.get('init'), globalEmber);
+      let dsPath = joinDSPath(assignment.get('init'), globalDS);
       for (let alias of extractAliases(
         mappings,
         assignment.get('id'),
-        emberPath
+        dsPath
       )) {
         aliases[alias.identifier.node.name] = alias;
       }
@@ -202,25 +178,23 @@ function transform(file, api /*, options*/) {
     return aliases;
   }
 
-  function findUsageOfDestructuredEmber(root, globalEmber) {
-    // Keep track of the nested properties off of the Ember namespace,
-    // to support multi-statement destructuring, i.e.:
-    // const { computed } = Ember;
-    // const { oneWay } = computed;
-    let globalEmberWithNestedProperties = [globalEmber];
+  function findUsageOfDestructuredDS(root, globalDS) {
+    // Keep track of the nested properties off of the DS namespace,
+    // const { Model } = DS;
+    let globalDSWithNestedProperties = [globalDS];
     let uses = root.find(j.VariableDeclarator, node => {
       if (j.Identifier.check(node.init)) {
-        if (includes(globalEmberWithNestedProperties, node.init.name)) {
-          // We've found an Ember global, or one of its nested properties.
+        if (includes(globalDSWithNestedProperties, node.init.name)) {
+          // We've found a DS global, or one of its nested properties.
           // Add it to the uses, and add its properties to the list of nested properties
           const identifierProperties = getIdentifierProperties(node);
-          globalEmberWithNestedProperties = globalEmberWithNestedProperties.concat(
+          globalDSWithNestedProperties = globalDSWithNestedProperties.concat(
             identifierProperties
           );
           return true;
         }
       } else if (j.MemberExpression.check(node.init)) {
-        return node.init.object.name === globalEmber;
+        return node.init.object.name === globalDS;
       }
     });
 
@@ -234,7 +208,7 @@ function transform(file, api /*, options*/) {
       if (!pendingGlobal.hasMissingGlobal) {
         parentPath.prune();
       } else {
-        warnMissingGlobal(parentPath, pendingGlobal.emberPath);
+        warnMissingGlobal(parentPath, pendingGlobal.dsPath);
       }
     });
   }
@@ -250,15 +224,15 @@ function transform(file, api /*, options*/) {
     return identifierProperties;
   }
 
-  function joinEmberPath(nodePath, globalEmber) {
+  function joinDSPath(nodePath, globalDS) {
     if (j.Identifier.check(nodePath.node)) {
-      if (nodePath.node.name !== globalEmber) {
+      if (nodePath.node.name !== globalDS) {
         return nodePath.node.name;
       }
     } else if (j.MemberExpression.check(nodePath.node)) {
       let lhs = nodePath.node.object.name;
-      let rhs = joinEmberPath(nodePath.get('property'));
-      if (lhs === globalEmber) {
+      let rhs = joinDSPath(nodePath.get('property'));
+      if (lhs === globalDS) {
         return rhs;
       } else {
         return `${lhs}.${rhs}`;
@@ -272,20 +246,20 @@ function transform(file, api /*, options*/) {
   // in case we have multi-statement destructuring, i.e:
   // const { computed } = Ember;
   // const { oneWay } = computed;
-  function extractAliases(mappings, pattern, emberPath) {
+  function extractAliases(mappings, pattern, dsPath) {
     if (j.Identifier.check(pattern.node)) {
-      if (emberPath in mappings) {
+      if (dsPath in mappings) {
         pattern.parentPath.prune();
-        const pendingGlobalParent = findPendingGlobal(emberPath);
+        const pendingGlobalParent = findPendingGlobal(dsPath);
         if (pendingGlobalParent) {
           // A parent has been found. Mark it as no longer being missing.
           pendingGlobalParent.hasMissingGlobal = false;
         }
 
-        return [new GlobalAlias(pattern, emberPath)];
+        return [new GlobalAlias(pattern, dsPath)];
       } else {
         let thisPatternHasMissingGlobal = false;
-        const pendingGlobalParent = findPendingGlobal(emberPath);
+        const pendingGlobalParent = findPendingGlobal(dsPath);
         if (pendingGlobalParent) {
           // A parent has been found.  Mark it as a missing global.
           pendingGlobalParent.hasMissingGlobal = true;
@@ -297,12 +271,12 @@ function transform(file, api /*, options*/) {
         // Add this pattern to pendingGlobals
         pendingGlobals[pattern.node.name] = {
           pattern,
-          emberPath,
+          dsPath,
           hasMissingGlobal: thisPatternHasMissingGlobal
         };
       }
     } else if (j.ObjectPattern.check(pattern.node)) {
-      let aliases = findObjectPatternAliases(mappings, pattern, emberPath);
+      let aliases = findObjectPatternAliases(mappings, pattern, dsPath);
       if (!pattern.node.properties.length) {
         pattern.parentPath.prune();
       }
@@ -312,11 +286,11 @@ function transform(file, api /*, options*/) {
     return [];
   }
 
-  function findPendingGlobal(emberPath) {
-    if (!emberPath) {
+  function findPendingGlobal(dsPath) {
+    if (!dsPath) {
       return;
     }
-    const paths = emberPath.split('.');
+    const paths = dsPath.split('.');
     for (let idx = 0; idx < paths.length; idx++) {
       const path = paths[idx];
       if (pendingGlobals[path]) {
@@ -341,15 +315,8 @@ function transform(file, api /*, options*/) {
   function resolveAliasImports(aliases, mappings, registry, root) {
     for (let globalName of Object.keys(aliases)) {
       let alias = aliases[globalName];
-      let mapping = mappings[alias.emberPath];
-      // skip if this is (also) a namespace and it is nowhere used as a direct function call
-      // In the case of `const { computed } = Ember` where `computed` is only used as a namespace (e.g. `computed.alias`)
-      // and not as a direct function call (`computed(function(){ ... })`), resolving the module would leave an unused
-      // module import
-      if (
-        !includes(EMBER_NAMESPACES, globalName) ||
-        hasSimpleCallExpression(root, alias.identifier.node.name)
-      ) {
+      let mapping = mappings[alias.dsPath];
+      if (hasSimpleCallExpression(root, alias.identifier.node.name)) {
         registry.get(
           mapping.source,
           mapping.imported,
@@ -371,7 +338,7 @@ function transform(file, api /*, options*/) {
   /**
    * Returns a function that can be used to map an array of MemberExpression
    * nodes into Replacement instances. Does the actual work of verifying if the
-   * `Ember` identifier used in the MemberExpression is actually replaceable.
+   * `DS` identifier used in the MemberExpression is actually replaceable.
    */
   function findReplacement(mappings, namespace) {
     return function(path) {
@@ -423,81 +390,12 @@ function transform(file, api /*, options*/) {
     };
   }
 
-  /**
-   * Returns an array of paths that are MemberExpressions of the given namespace, e.g. `computed.alias`
-   */
-  function findNamespaceUsage(root, globalEmber, namespace) {
-    let namespaceUsages = root.find(j.MemberExpression, {
-      object: {
-        name: namespace
-      }
-    });
-    let destructureStatements = findUsageOfDestructuredEmber(root, globalEmber);
-
-    // the namespace like `computed` could be coming from something other than `Ember.computed`
-    // so we check the VariableDeclaration within the scope where it is defined and compare that to our
-    // `destructureStatements` to make sure this is really coming from on of those
-    return namespaceUsages
-      .filter(path => {
-        let scope = path.scope.lookup(namespace);
-        if (!scope) return false;
-        let bindings = scope.getBindings()[namespace];
-        if (!bindings) return false;
-
-        let parent = bindings[0].parent;
-        while (parent) {
-          // if the namespace is defined by a variable declaration, make sure this is one of our Ember destructure statements
-          if (j.VariableDeclarator.check(parent.node)) {
-            return includes(destructureStatements, parent);
-          }
-          // if the codemod has run before namespaces were supported, the `computed` namespace may already have been imported
-          // through the new module API. So this is still using by a valid Ember namespace, so return true
-          if (j.ImportDeclaration.check(parent.node)) {
-            return parent.node.source.value.match(/@ember\//);
-          }
-
-          parent = parent.parent;
-        }
-
-        return false;
-      })
-      .paths();
-  }
-
-  /**
-   * Remove any destructuring of namespaces, like `const { inject } = Ember`
-   */
-  function removeNamespaces(root, globalEmber, namespaces) {
-    let assignments = findUsageOfDestructuredEmber(root, globalEmber);
-    for (let assignment of assignments) {
-      let emberPath = joinEmberPath(assignment.get('init'), globalEmber);
-
-      if (!emberPath && j.ObjectPattern.check(assignment.node.id)) {
-        assignment
-          .get('id')
-          .get('properties')
-          .filter(path => {
-            let node = path.node;
-            return (
-              j.Identifier.check(node.key) &&
-              includes(namespaces, node.key.name)
-            );
-          })
-          .forEach(path => path.prune());
-
-        if (!assignment.node.id.properties.length) {
-          assignment.prune();
-        }
-      }
-    }
-  }
-
-  function warnMissingGlobal(nodePath, emberPath) {
+  function warnMissingGlobal(nodePath, dsPath) {
     let context = extractSourceContext(nodePath);
     let lineNumber = nodePath.value.loc.start.line;
     warnings.push([
       MISSING_GLOBAL_WARNING,
-      emberPath,
+      dsPath,
       lineNumber,
       file.path,
       context
@@ -531,15 +429,12 @@ function transform(file, api /*, options*/) {
       });
   }
 
-  function removeGlobalEmber(root, globalEmber) {
-    let remainingGlobals = findUsageOfEmberGlobal(root, globalEmber);
-    let remainingDestructuring = findUsageOfDestructuredEmber(
-      root,
-      globalEmber
-    );
+  function removeGlobalDS(root, globalDS) {
+    let remainingGlobals = findUsageOfDSGlobal(root, globalDS);
+    let remainingDestructuring = findUsageOfDestructuredDS(root, globalDS);
 
     if (!remainingGlobals.length && !remainingDestructuring.length) {
-      getGlobalEmberImport(root).remove();
+      getGlobalDSImport(root).remove();
     }
   }
 
@@ -681,10 +576,10 @@ function transform(file, api /*, options*/) {
     return declaration;
   }
 
-  function isEmberGlobal(name) {
+  function isDSGlobal(name) {
     return function(path) {
-      let localEmber = !path.scope.isGlobal && path.scope.declares(name);
-      return !localEmber;
+      let localDS = !path.scope.isGlobal && path.scope.declares(name);
+      return !localDS;
     };
   }
 
@@ -774,9 +669,9 @@ class Module {
 }
 
 class GlobalAlias {
-  constructor(identifier, emberPath) {
+  constructor(identifier, dsPath) {
     this.identifier = identifier;
-    this.emberPath = emberPath;
+    this.dsPath = dsPath;
   }
 }
 
