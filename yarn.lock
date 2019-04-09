@@ -2094,9 +2094,9 @@ ecc-jsbn@~0.1.1:
     jsbn "~0.1.0"
     safer-buffer "^2.1.0"
 
-"ember-data-rfc395-data@github:ember-data/ember-data-rfc395-data":
+"ember-data-rfc395-data@github:dcyriller/ember-data-rfc395-data#finish-mappings":
   version "0.0.0"
-  resolved "https://codeload.github.com/ember-data/ember-data-rfc395-data/tar.gz/ea5ddff604d358927ce0fba3fa1f03701487a999"
+  resolved "https://codeload.github.com/dcyriller/ember-data-rfc395-data/tar.gz/5ffc1d36824a4560db031579e3f3c887b385302b"
 
 emoji-regex@^7.0.1:
   version "7.0.3"

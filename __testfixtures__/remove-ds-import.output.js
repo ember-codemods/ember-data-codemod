@@ -1,4 +1,4 @@
-import Model from '@ember-data/Model';
+import Model from '@ember-data/model';
 
 export default Model.extend({
 });
