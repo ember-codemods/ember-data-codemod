@@ -13,7 +13,8 @@ import Nodel, { attr as thing } from "@ember-data/model";
 let bar = foo.DS.attr;
 
 export default Nodel.extend({
-  shoe: thing('number')
+  shoe: thing('number'),
+  glass: thing('string')
 });
 
 (function() {

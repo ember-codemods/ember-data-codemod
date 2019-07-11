@@ -20,7 +20,8 @@ const {
 } = DS;
 
 export default DS.Model.extend({
-  shoe: thing('number')
+  shoe: thing('number'),
+  glass: DS.attr('string')
 });
 
 (function() {
