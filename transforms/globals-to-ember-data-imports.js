@@ -55,7 +55,7 @@ function transform(file, api /*, options*/) {
     // Resolve the discovered aliases against the module registry. We intentionally do
     // this ahead of finding replacements for e.g. `DS.Model` usage in
     // order to reuse custom names for any fields referenced both ways.
-    resolveAliasImports(globalAliases, mappings, modules, root);
+    resolveAliasImports(globalAliases, mappings, modules);
 
     // Scan the source code, looking for any instances of the `DS` identifier
     // used as the root of a property lookup. If they match one of the provided
@@ -312,27 +312,16 @@ function transform(file, api /*, options*/) {
     return aliases;
   }
 
-  function resolveAliasImports(aliases, mappings, registry, root) {
+  function resolveAliasImports(aliases, mappings, registry) {
     for (let globalName of Object.keys(aliases)) {
       let alias = aliases[globalName];
       let mapping = mappings[alias.dsPath];
-      if (hasSimpleCallExpression(root, alias.identifier.node.name)) {
-        registry.get(
-          mapping.source,
-          mapping.imported,
-          alias.identifier.node.name
-        );
-      }
+      registry.get(
+        mapping.source,
+        mapping.imported,
+        alias.identifier.node.name
+      );
     }
-  }
-
-  function hasSimpleCallExpression(root, name) {
-    let paths = root.find(j.CallExpression, {
-      callee: {
-        name
-      }
-    });
-    return paths.length > 0;
   }
 
   /**
