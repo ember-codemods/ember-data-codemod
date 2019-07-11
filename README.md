@@ -1,6 +1,6 @@
 # Ember Data Codemod
 
-This is a codemod to uprade to the new "@ember-data" packages.
+This is a codemod to upgrade to the new "@ember-data" packages.
 
 Before version 3.11, you would import ember-data modules from "ember-data".
 
