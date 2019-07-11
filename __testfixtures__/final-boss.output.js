@@ -8,6 +8,8 @@
 //  * Manual aliasing (`var Adapter = DS.Adapter` is removed)
 //  * `DS` must be the root of property lookups (no `foo.DS.bar`)
 //  * Renamed destructured aliases are preserved (`attr: thing`)
+import Adapter from '@ember-data/adapter';
+
 import Nodel, { attr as thing } from "@ember-data/model";
 
 let bar = foo.DS.attr;
