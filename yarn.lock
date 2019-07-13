@@ -725,6 +725,11 @@
     exec-sh "^0.3.2"
     minimist "^1.2.0"
 
+"@ember-data/rfc395-data@^0.0.3":
+  version "0.0.3"
+  resolved "https://registry.yarnpkg.com/@ember-data/rfc395-data/-/rfc395-data-0.0.3.tgz#5794bb68bea0b92ab302f53a5d03f7f80c2d8d29"
+  integrity sha512-sO7OBCAVRq3tCTktCe6z1N435+m0kS92MnD5rj1ayijec4NhZidoJQoVfcnqKj/PcK0hkrgBm6yyXs1MK8rhaA==
+
 "@jest/console@^24.7.1":
   version "24.7.1"
   resolved "https://registry.yarnpkg.com/@jest/console/-/console-24.7.1.tgz#32a9e42535a97aedfe037e725bd67e954b459545"
@@ -1728,10 +1733,6 @@ electron-to-chromium@^1.3.191:
   version "1.3.191"
   resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.3.191.tgz#c451b422cd8b2eab84dedabab5abcae1eaefb6f0"
   integrity sha512-jasjtY5RUy/TOyiUYM2fb4BDaPZfm6CXRFeJDMfFsXYADGxUN49RBqtgB7EL2RmJXeIRUk9lM1U6A5yk2YJMPQ==
-
-"ember-data-rfc395-data@github:ember-data/ember-data-rfc395-data#v0.0.2":
-  version "0.0.2"
-  resolved "https://codeload.github.com/ember-data/ember-data-rfc395-data/tar.gz/e1c221f4c29922fa6a61a6b89032392c4c2dcea0"
 
 emoji-regex@^7.0.1:
   version "7.0.3"

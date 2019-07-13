@@ -1,7 +1,7 @@
 'use strict';
 
 const fs = require('fs');
-const MAPPINGS = require('ember-data-rfc395-data');
+const MAPPINGS = require('@ember-data/rfc395-data');
 
 const LOG_FILE = 'ember-data-codemod.tmp.' + process.pid;
 const ERROR_WARNING = 1;
