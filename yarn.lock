@@ -139,6 +139,10 @@
     exec-sh "^0.3.2"
     minimist "^1.2.0"
 
+"@ember-data/rfc395-data@github:ember-data/ember-data-rfc395-data":
+  version "0.0.2"
+  resolved "https://codeload.github.com/ember-data/ember-data-rfc395-data/tar.gz/acaaa4e9c832067deb0d11295b1ef30ea8c3358f"
+
 "@jest/console@^24.7.1":
   version "24.7.1"
   resolved "https://registry.yarnpkg.com/@jest/console/-/console-24.7.1.tgz#32a9e42535a97aedfe037e725bd67e954b459545"
@@ -2079,10 +2083,6 @@ ecc-jsbn@~0.1.1:
   dependencies:
     jsbn "~0.1.0"
     safer-buffer "^2.1.0"
-
-"ember-data-rfc395-data@github:ember-data/ember-data-rfc395-data#v0.0.2":
-  version "0.0.2"
-  resolved "https://codeload.github.com/ember-data/ember-data-rfc395-data/tar.gz/e1c221f4c29922fa6a61a6b89032392c4c2dcea0"
 
 emoji-regex@^7.0.1:
   version "7.0.3"
