@@ -15,7 +15,7 @@
     "ember-data-rfc395-data": "github:ember-data/ember-data-rfc395-data#v0.0.2",
     "execa": "^2.0.3",
     "glob": "^7.1.4",
-    "jscodeshift": "^0.3.29"
+    "jscodeshift": "^0.6.4"
   },
   "devDependencies": {
     "eslint": "^6.0.1",
