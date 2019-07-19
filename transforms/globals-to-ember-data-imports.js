@@ -1,7 +1,7 @@
 'use strict';
 
 const fs = require('fs');
-const MAPPINGS = require('ember-data-rfc395-data');
+const MAPPINGS = require('@ember-data/rfc395-data');
 
 const LOG_FILE = 'ember-data-codemod.tmp.' + process.pid;
 const ERROR_WARNING = 1;
@@ -112,12 +112,10 @@ function transform(file, api /*, options*/) {
     let mappings = {};
 
     for (let mapping of MAPPINGS) {
-      if (!mapping.deprecated) {
-        mappings[mapping.global.substr('DS.'.length)] = new Mapping(
-          mapping,
-          registry
-        );
-      }
+      mappings[mapping.global.substr('DS.'.length)] = new Mapping(
+        mapping,
+        registry
+      );
     }
 
     return mappings;
@@ -673,8 +671,8 @@ class Replacement {
 
 class Mapping {
   constructor(options, registry) {
-    this.source = options.module;
-    this.imported = options.export;
+    this.source = options.replacement.module;
+    this.imported = options.replacement.export;
     this.local = options.localName;
     this.registry = registry;
   }
