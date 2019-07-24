@@ -64,13 +64,10 @@ function transform(file, api /*, options*/) {
       findReplacement(mappings)
     );
 
-    // Update literal paths based on mappings from 'ember-data/model' to '@ember-data/model'
-    updateLiteralPaths(root, mappings, modules)
-
     // Now that we've identified all of the replacements that we need to do, we'll
     // make sure to either add new `import` declarations, or update existing ones
     // to add new named exports or the default export.
-    updateOrCreateImportDeclarations(root, modules);
+    updateOrCreateImportDeclarations(root, mappings, modules);
 
     // Actually go through and replace each usage of `DS.whatever` with the
     // imported binding (`whatever`).
@@ -164,25 +161,23 @@ function transform(file, api /*, options*/) {
    * loops through all modules and replaces literal path if necessary
    * 'ember-data/model' -> '@ember-data/model'
    */
-  function updateLiteralPaths(root, mappings, registry) {
-    return registry.modules.map((module) => {
-      let foundMapping = mappings[module.local];
-      if (foundMapping) {
-        let newSource = foundMapping.source;
-        if (module.source !== newSource) {
-          root.find(j.ImportDeclaration, {
-            source: {
-              type: 'Literal',
-              value: module.source
-            }
-          })
-          .find(j.Literal)
-          .forEach((importLiteral) => {
-            j(importLiteral).replaceWith(j.literal(newSource))
-          });
-        }
+  function updateLiteralPaths(root, module, mappings) {
+    let foundMapping = mappings[module.local];
+    if (foundMapping) {
+      let newSource = foundMapping.source;
+      if (module.source !== newSource) {
+        root.find(j.ImportDeclaration, {
+          source: {
+            type: 'Literal',
+            value: module.source
+          }
+        })
+        .find(j.Literal)
+        .forEach((importLiteral) => {
+          j(importLiteral).replaceWith(j.literal(newSource))
+        });
       }
-    })
+    }
   }
 
   // Find destructured global aliases for fields on the DS global
@@ -464,7 +459,7 @@ function transform(file, api /*, options*/) {
     return parent.node.id.name === local;
   }
 
-  function updateOrCreateImportDeclarations(root, registry) {
+  function updateOrCreateImportDeclarations(root, mappings, registry) {
     let body = root.get().value.program.body;
 
     registry.modules.forEach(mod => {
@@ -498,6 +493,9 @@ function transform(file, api /*, options*/) {
           delete body[1].comments;
           mod.node = importStatement;
         }
+      } else {
+        // Update literal paths based on mappings from 'ember-data/model' to '@ember-data/model'
+        updateLiteralPaths(root, mod, mappings)
       }
     });
   }
