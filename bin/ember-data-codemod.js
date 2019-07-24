@@ -11,7 +11,7 @@ let cwd = process.cwd();
 let pkgPath = path.join(cwd, 'package.json');
 
 const DEFAULT_PATHS = [
-  'app'
+  'app',
   'addon',
   'addon-test-support',
   'tests',
