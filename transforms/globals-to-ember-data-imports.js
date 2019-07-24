@@ -67,7 +67,7 @@ function transform(file, api /*, options*/) {
     // Now that we've identified all of the replacements that we need to do, we'll
     // make sure to either add new `import` declarations, or update existing ones
     // to add new named exports or the default export.
-    updateOrCreateImportDeclarations(root, mappings, modules);
+    updateOrCreateImportDeclarations(root, modules, mappings);
 
     // Actually go through and replace each usage of `DS.whatever` with the
     // imported binding (`whatever`).
@@ -459,7 +459,7 @@ function transform(file, api /*, options*/) {
     return parent.node.id.name === local;
   }
 
-  function updateOrCreateImportDeclarations(root, mappings, registry) {
+  function updateOrCreateImportDeclarations(root, registry, mappings) {
     let body = root.get().value.program.body;
 
     registry.modules.forEach(mod => {
