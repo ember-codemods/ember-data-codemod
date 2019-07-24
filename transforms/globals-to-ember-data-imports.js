@@ -166,16 +166,17 @@ function transform(file, api /*, options*/) {
     if (foundMapping) {
       let newSource = foundMapping.source;
       if (module.source !== newSource) {
-        root.find(j.ImportDeclaration, {
-          source: {
-            type: 'Literal',
-            value: module.source
-          }
-        })
-        .find(j.Literal)
-        .forEach((importLiteral) => {
-          j(importLiteral).replaceWith(j.literal(newSource))
-        });
+        root
+          .find(j.ImportDeclaration, {
+            source: {
+              type: 'Literal',
+              value: module.source
+            }
+          })
+          .find(j.Literal)
+          .forEach(importLiteral => {
+            j(importLiteral).replaceWith(j.literal(newSource));
+          });
       }
     }
   }
@@ -495,7 +496,7 @@ function transform(file, api /*, options*/) {
         }
       } else {
         // Update literal paths based on mappings from 'ember-data/model' to '@ember-data/model'
-        updateLiteralPaths(root, mod, mappings)
+        updateLiteralPaths(root, mod, mappings);
       }
     });
   }
