@@ -80,7 +80,7 @@ function transform(file, api /*, options*/) {
     // We'll use a regular expression to try to improve the situation (courtesy of @rwjblue).
     const lineTerminator = source.indexOf('\r\n') > -1 ? '\r\n' : '\n';
 
-    source = root.toSource(Object.assign({}, OPTS, { lineTerminator }))
+    source = root.toSource(Object.assign({}, OPTS, { lineTerminator }));
   } catch (e) {
     if (process.env.EMBER_DATA_CODEMOD) {
       warnings.push([ERROR_WARNING, file.path, source, e.stack]);
