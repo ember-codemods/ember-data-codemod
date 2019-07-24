@@ -11,7 +11,7 @@ let cwd = process.cwd();
 let pkgPath = path.join(cwd, 'package.json');
 
 const DEFAULT_PATHS = [
-  'app',
+  'app'
   'addon',
   'addon-test-support',
   'tests',
@@ -143,7 +143,7 @@ function buildReport() {
       );
     } else {
       console.log(
-        chalk.green('\nDone! All uses of the Ember global have been updated.')
+        chalk.green('\nDone! All uses of the Ember global and Ember Data imports have been updated.')
       );
     }
   });
