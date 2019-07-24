@@ -160,21 +160,25 @@ function transform(file, api /*, options*/) {
     return dsUsages.filter(isDSGlobal(globalDS)).paths();
   }
 
+  /*
+   */
   function updateLiteralPaths(root, mappings, registry) {
     return registry.modules.map((module) => {
       let foundMapping = mappings[module.local];
       if (foundMapping) {
         let newSource = foundMapping.source;
-        root.find(j.ImportDeclaration, {
-          source: {
-            type: 'Literal',
-            value: module.source
-          }
-        })
-        .find(j.Literal)
-        .forEach((importLiteral) => {
-          j(importLiteral).replaceWith(j.literal(newSource))
-        });
+        if (module.source !== newSource) {
+          root.find(j.ImportDeclaration, {
+            source: {
+              type: 'Literal',
+              value: module.source
+            }
+          })
+          .find(j.Literal)
+          .forEach((importLiteral) => {
+            j(importLiteral).replaceWith(j.literal(newSource))
+          });
+        }
       }
     })
   }
