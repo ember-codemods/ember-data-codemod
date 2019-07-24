@@ -161,6 +161,8 @@ function transform(file, api /*, options*/) {
   }
 
   /*
+   * loops through all modules and replaces literal path if necessary
+   * 'ember-data/model' -> '@ember-data/model'
    */
   function updateLiteralPaths(root, mappings, registry) {
     return registry.modules.map((module) => {
