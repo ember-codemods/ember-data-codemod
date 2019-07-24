@@ -64,6 +64,9 @@ function transform(file, api /*, options*/) {
       findReplacement(mappings)
     );
 
+    // Update literal paths based on mappings from 'ember-data/model' to '@ember-data/model'
+    updateLiteralPaths(root, mappings, modules)
+
     // Now that we've identified all of the replacements that we need to do, we'll
     // make sure to either add new `import` declarations, or update existing ones
     // to add new named exports or the default export.
@@ -155,6 +158,25 @@ function transform(file, api /*, options*/) {
     });
 
     return dsUsages.filter(isDSGlobal(globalDS)).paths();
+  }
+
+  function updateLiteralPaths(root, mappings, registry) {
+    return registry.modules.map((module) => {
+      let foundMapping = mappings[module.local];
+      if (foundMapping) {
+        let newSource = foundMapping.source;
+        root.find(j.ImportDeclaration, {
+          source: {
+            type: 'Literal',
+            value: module.source
+          }
+        })
+        .find(j.Literal)
+        .forEach((importLiteral) => {
+          j(importLiteral).replaceWith(j.literal(newSource))
+        });
+      }
+    })
   }
 
   // Find destructured global aliases for fields on the DS global
@@ -448,7 +470,6 @@ function transform(file, api /*, options*/) {
         let declaration = root.find(j.ImportDeclaration, {
           source: { value: mod.source }
         });
-
         if (declaration.size() > 0) {
           let specifier;
 
