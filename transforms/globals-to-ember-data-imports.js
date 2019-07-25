@@ -188,44 +188,41 @@ function transform(file, api /*, options*/) {
    */
   function cleanupDuplicateLiteralPaths() {
     const imports = {};
-    root.find(j.ImportDeclaration)
-      .forEach(nodePath => {
-        let value = nodePath.value && nodePath.value.source.value;
+    root.find(j.ImportDeclaration).forEach(nodePath => {
+      let value = nodePath.value && nodePath.value.source.value;
 
-        if (!(value in imports)) {
-          // add to found imports and we wont modify
-          imports[value] = nodePath;
-        } else {
-          // get all specifiers and add to existing import
-          // then delete this nodePath
-          let specifiers = nodePath.value && nodePath.value.specifiers;
-          let existingNodePath = imports[value];
+      if (!(value in imports)) {
+        // add to found imports and we wont modify
+        imports[value] = nodePath;
+      } else {
+        // get all specifiers and add to existing import
+        // then delete this nodePath
+        let specifiers = nodePath.value && nodePath.value.specifiers;
+        let existingNodePath = imports[value];
 
-          specifiers.forEach((spec) => {
-            let local = spec.local;
-            let imported = spec.imported;
+        specifiers.forEach(spec => {
+          let local = spec.local;
+          let imported = spec.imported;
 
-            if (imported === 'default') {
-              let specifier = j.importDefaultSpecifier(j.identifier(local));
-              // default imports go at front
-              existingNodePath.get('specifiers').unshift(specifier);
-            } else if (imported && local) {
-              let specifier = j.importSpecifier(
-                j.identifier(imported.name),
-                j.identifier(local.name)
-              );
-              existingNodePath.get('specifiers').push(specifier);
-            } else {
-              let specifier = j.importSpecifier(
-                j.identifier(local.name)
-              );
-              existingNodePath.get('specifiers').push(specifier);
-            }
-          });
+          if (imported === 'default') {
+            let specifier = j.importDefaultSpecifier(j.identifier(local));
+            // default imports go at front
+            existingNodePath.get('specifiers').unshift(specifier);
+          } else if (imported && local) {
+            let specifier = j.importSpecifier(
+              j.identifier(imported.name),
+              j.identifier(local.name)
+            );
+            existingNodePath.get('specifiers').push(specifier);
+          } else {
+            let specifier = j.importSpecifier(j.identifier(local.name));
+            existingNodePath.get('specifiers').push(specifier);
+          }
+        });
 
-          nodePath.prune()
-        }
-      });
+        nodePath.prune();
+      }
+    });
   }
 
   // Find destructured global aliases for fields on the DS global

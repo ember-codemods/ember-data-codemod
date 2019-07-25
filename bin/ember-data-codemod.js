@@ -143,7 +143,9 @@ function buildReport() {
       );
     } else {
       console.log(
-        chalk.green('\nDone! All uses of the Ember global and Ember Data imports have been updated.')
+        chalk.green(
+          '\nDone! All uses of the Ember global and Ember Data imports have been updated.'
+        )
       );
     }
   });
