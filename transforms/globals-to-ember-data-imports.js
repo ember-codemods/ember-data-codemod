@@ -190,7 +190,8 @@ function transform(file, api /*, options*/) {
     const uniqueImports = {};
 
     root.find(j.ImportDeclaration).forEach(nodePath => {
-      let value = nodePath.value && nodePath.value.source.value;
+      let node = nodePath.node;
+      let value = node.source && node.source.value;
 
       if (!(value in uniqueImports)) {
         // add to found uniqueImports and we wont modify
@@ -198,7 +199,7 @@ function transform(file, api /*, options*/) {
       } else {
         // get all specifiers and add to existing import
         // then delete this nodePath
-        let specifiers = nodePath.value && nodePath.value.specifiers;
+        let specifiers = node.specifiers;
         let existingNodePath = uniqueImports[value];
 
         specifiers.forEach(spec => {
