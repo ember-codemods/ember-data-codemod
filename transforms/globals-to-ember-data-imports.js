@@ -161,8 +161,9 @@ function transform(file, api /*, options*/) {
    * loops through all modules and replaces literal path if necessary
    * 'ember-data/model' -> '@ember-data/model'
    */
-  function updateLiteralPaths(root, module, mappings) {
+  function updateExistingLiteralPaths(root, module, mappings) {
     let foundMapping = mappings[module.local];
+
     if (foundMapping) {
       let newSource = foundMapping.source;
       if (module.source !== newSource) {
@@ -179,6 +180,52 @@ function transform(file, api /*, options*/) {
           });
       }
     }
+  }
+
+  /*
+   * After modifying existing sources to their new paths, we need
+   * to make sure we clean up duplicate imports
+   */
+  function cleanupDuplicateLiteralPaths() {
+    const imports = {};
+    root.find(j.ImportDeclaration)
+      .forEach(nodePath => {
+        let value = nodePath.value && nodePath.value.source.value;
+
+        if (!(value in imports)) {
+          // add to found imports and we wont modify
+          imports[value] = nodePath;
+        } else {
+          // get all specifiers and add to existing import
+          // then delete this nodePath
+          let specifiers = nodePath.value && nodePath.value.specifiers;
+          let existingNodePath = imports[value];
+
+          specifiers.forEach((spec) => {
+            let local = spec.local;
+            let imported = spec.imported;
+
+            if (imported === 'default') {
+              let specifier = j.importDefaultSpecifier(j.identifier(local));
+              // default imports go at front
+              existingNodePath.get('specifiers').unshift(specifier);
+            } else if (imported && local) {
+              let specifier = j.importSpecifier(
+                j.identifier(imported.name),
+                j.identifier(local.name)
+              );
+              existingNodePath.get('specifiers').push(specifier);
+            } else {
+              let specifier = j.importSpecifier(
+                j.identifier(local.name)
+              );
+              existingNodePath.get('specifiers').push(specifier);
+            }
+          });
+
+          nodePath.prune()
+        }
+      });
   }
 
   // Find destructured global aliases for fields on the DS global
@@ -477,6 +524,7 @@ function transform(file, api /*, options*/) {
 
           if (imported === 'default') {
             specifier = j.importDefaultSpecifier(j.identifier(local));
+            // default imports go at front
             declaration.get('specifiers').unshift(specifier);
           } else {
             specifier = j.importSpecifier(
@@ -494,11 +542,15 @@ function transform(file, api /*, options*/) {
           delete body[1].comments;
           mod.node = importStatement;
         }
-      } else {
-        // Update literal paths based on mappings from 'ember-data/model' to '@ember-data/model'
-        updateLiteralPaths(root, mod, mappings);
       }
+
+      // Update literal paths based on mappings from 'ember-data/model' to '@ember-data/model'
+      // by pushing into existing declaration specifiers
+      updateExistingLiteralPaths(root, mod, mappings);
     });
+
+    // // then remove old duplicate specifier if found
+    cleanupDuplicateLiteralPaths();
   }
 
   function findExistingModules(root) {
