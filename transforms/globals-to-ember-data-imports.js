@@ -187,18 +187,19 @@ function transform(file, api /*, options*/) {
    * to make sure we clean up duplicate imports
    */
   function cleanupDuplicateLiteralPaths() {
-    const imports = {};
+    const uniqueImports = {};
+
     root.find(j.ImportDeclaration).forEach(nodePath => {
       let value = nodePath.value && nodePath.value.source.value;
 
-      if (!(value in imports)) {
-        // add to found imports and we wont modify
-        imports[value] = nodePath;
+      if (!(value in uniqueImports)) {
+        // add to found uniqueImports and we wont modify
+        uniqueImports[value] = nodePath;
       } else {
         // get all specifiers and add to existing import
         // then delete this nodePath
         let specifiers = nodePath.value && nodePath.value.specifiers;
-        let existingNodePath = imports[value];
+        let existingNodePath = uniqueImports[value];
 
         specifiers.forEach(spec => {
           let local = spec.local;
@@ -546,7 +547,7 @@ function transform(file, api /*, options*/) {
       updateExistingLiteralPaths(root, mod, mappings);
     });
 
-    // // then remove old duplicate specifier if found
+    // then remove old duplicate specifier if found
     cleanupDuplicateLiteralPaths();
   }
 
