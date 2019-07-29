@@ -89,7 +89,7 @@ function buildReport() {
 
   // Find all of the temporary logs from the worker processes, which contain a
   // serialized JSON array on each line.
-  glob('ember-modules-codemod.tmp.*', (err, logs) => {
+  glob('ember-data-codemod.tmp.*', (err, logs) => {
     // If no worker found an unexpected value, nothing to report.
     if (!logs) {
       return;
@@ -143,7 +143,9 @@ function buildReport() {
       );
     } else {
       console.log(
-        chalk.green('\nDone! All uses of the Ember global have been updated.')
+        chalk.green(
+          '\nDone! All uses of the Ember global and Ember Data imports have been updated.'
+        )
       );
     }
   });

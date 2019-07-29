@@ -67,7 +67,7 @@ function transform(file, api /*, options*/) {
     // Now that we've identified all of the replacements that we need to do, we'll
     // make sure to either add new `import` declarations, or update existing ones
     // to add new named exports or the default export.
-    updateOrCreateImportDeclarations(root, modules);
+    updateOrCreateImportDeclarations(root, modules, mappings);
 
     // Actually go through and replace each usage of `DS.whatever` with the
     // imported binding (`whatever`).
@@ -155,6 +155,76 @@ function transform(file, api /*, options*/) {
     });
 
     return dsUsages.filter(isDSGlobal(globalDS)).paths();
+  }
+
+  /*
+   * loops through all modules and replaces literal path if necessary
+   * 'ember-data/model' -> '@ember-data/model'
+   */
+  function updateExistingLiteralPaths(root, module, mappings) {
+    let foundMapping = mappings[module.local];
+
+    if (foundMapping) {
+      let newSource = foundMapping.source;
+      if (module.source !== newSource) {
+        root
+          .find(j.ImportDeclaration, {
+            source: {
+              type: 'Literal',
+              value: module.source
+            }
+          })
+          .find(j.Literal)
+          .forEach(importLiteral => {
+            j(importLiteral).replaceWith(j.literal(newSource));
+          });
+      }
+    }
+  }
+
+  /*
+   * After modifying existing sources to their new paths, we need
+   * to make sure we clean up duplicate imports
+   */
+  function cleanupDuplicateLiteralPaths() {
+    const uniqueImports = {};
+
+    root.find(j.ImportDeclaration).forEach(nodePath => {
+      let node = nodePath.node;
+      let value = node.source && node.source.value;
+
+      if (!(value in uniqueImports)) {
+        // add to found uniqueImports and we wont modify
+        uniqueImports[value] = nodePath;
+      } else {
+        // get all specifiers and add to existing import
+        // then delete this nodePath
+        let specifiers = node.specifiers;
+        let existingNodePath = uniqueImports[value];
+
+        specifiers.forEach(spec => {
+          let local = spec.local;
+          let imported = spec.imported;
+
+          if (imported === 'default') {
+            let specifier = j.importDefaultSpecifier(j.identifier(local));
+            // default imports go at front
+            existingNodePath.get('specifiers').unshift(specifier);
+          } else if (imported && local) {
+            let specifier = j.importSpecifier(
+              j.identifier(imported.name),
+              j.identifier(local.name)
+            );
+            existingNodePath.get('specifiers').push(specifier);
+          } else {
+            let specifier = j.importSpecifier(j.identifier(local.name));
+            existingNodePath.get('specifiers').push(specifier);
+          }
+        });
+
+        nodePath.prune();
+      }
+    });
   }
 
   // Find destructured global aliases for fields on the DS global
@@ -436,7 +506,7 @@ function transform(file, api /*, options*/) {
     return parent.node.id.name === local;
   }
 
-  function updateOrCreateImportDeclarations(root, registry) {
+  function updateOrCreateImportDeclarations(root, registry, mappings) {
     let body = root.get().value.program.body;
 
     registry.modules.forEach(mod => {
@@ -448,12 +518,12 @@ function transform(file, api /*, options*/) {
         let declaration = root.find(j.ImportDeclaration, {
           source: { value: mod.source }
         });
-
         if (declaration.size() > 0) {
           let specifier;
 
           if (imported === 'default') {
             specifier = j.importDefaultSpecifier(j.identifier(local));
+            // default imports go at front
             declaration.get('specifiers').unshift(specifier);
           } else {
             specifier = j.importSpecifier(
@@ -472,7 +542,14 @@ function transform(file, api /*, options*/) {
           mod.node = importStatement;
         }
       }
+
+      // Update literal paths based on mappings from 'ember-data/model' to '@ember-data/model'
+      // by pushing into existing declaration specifiers
+      updateExistingLiteralPaths(root, mod, mappings);
     });
+
+    // then remove old duplicate specifier if found
+    cleanupDuplicateLiteralPaths();
   }
 
   function findExistingModules(root) {
