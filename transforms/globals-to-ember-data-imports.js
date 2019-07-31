@@ -162,7 +162,9 @@ function transform(file, api /*, options*/) {
    * 'ember-data/model' -> '@ember-data/model'
    */
   function updateExistingLiteralPaths(root, module, mappings) {
-    let foundMapping = mappings[module.local];
+    const mappingName =
+      module.imported === 'default' ? module.local : module.imported;
+    let foundMapping = mappings[mappingName];
 
     if (foundMapping) {
       // first, update specifier if different than what mapping says it should be
