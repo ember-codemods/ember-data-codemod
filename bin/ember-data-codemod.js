@@ -144,7 +144,7 @@ function buildReport() {
     } else {
       console.log(
         chalk.green(
-          '\nDone! All uses of the Ember global and Ember Data imports have been updated.'
+          '\nDone! All uses of the DS global and Ember Data imports have been updated.'
         )
       );
     }

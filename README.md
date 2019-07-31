@@ -29,9 +29,9 @@ export default Model.extend({
 
 ## Usage
 
-The package is not released yet. For now, you can run it this way: 
+You can run it this way: 
 ```sh
-npx github:dcyriller/ember-data-codemod
+npx ember-data-codemod app tests
 ```
 
 ## Credits
