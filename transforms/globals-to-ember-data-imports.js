@@ -162,59 +162,62 @@ function transform(file, api /*, options*/) {
    * 'ember-data/model' -> '@ember-data/model'
    */
   function updateExistingLiteralPaths(root, module, mappings) {
-    const mappingName =
-      module.imported === 'default' ? module.local : module.imported;
+    const { imported, local, source } = module;
+    const mappingName = imported === 'default' ? local : imported;
     let foundMapping = mappings[mappingName];
 
-    if (foundMapping) {
-      // first, update specifier if different than what mapping says it should be
-      if (foundMapping.imported !== module.imported) {
-        const updateSpecifiers = (j, foundMapping) => {
-          return path => {
-            let parentPath = path.parentPath;
+    if (!foundMapping) {
+      return;
+    }
 
-            if (foundMapping.imported === 'default') {
-              j(parentPath).replaceWith(() => {
-                return j.importDefaultSpecifier(j.identifier('default'));
-              });
-            } else {
-              j(parentPath).replaceWith(() => {
-                return j.importSpecifier(j.identifier(foundMapping.imported));
-              });
-            }
-          };
-        };
+    const {
+      imported: replacementImported,
+      local: replacementLocal,
+      source: replacementSource
+    } = foundMapping;
 
-        let importSpecifiers = root
-          .find(j.ImportDeclaration)
-          .find(j.ImportSpecifier)
-          .find(j.Identifier, { name: module.local });
+    // first, update specifier if different than what mapping says it should be
+    if (imported !== replacementImported) {
+      const updateSpecifiers = path => {
+        let specifier;
 
-        let importDefaultSpecifiers = root
-          .find(j.ImportDeclaration)
-          .find(j.ImportDefaultSpecifier)
-          .find(j.Identifier, { name: module.local });
+        if (replacementImported === 'default') {
+          const name = replacementLocal || local;
+          specifier = j.importDefaultSpecifier(j.identifier(name));
+        } else {
+          specifier = j.importSpecifier(j.identifier(replacementImported));
+        }
 
-        []
-          .concat(importSpecifiers.paths(), importDefaultSpecifiers.paths())
-          .forEach(updateSpecifiers(j, foundMapping));
-      }
+        j(path.parentPath).replaceWith(specifier);
+      };
 
-      // second, update literal path
-      let newSource = foundMapping.source;
-      if (module.source !== newSource) {
-        root
-          .find(j.ImportDeclaration, {
-            source: {
-              type: 'Literal',
-              value: module.source
-            }
-          })
-          .find(j.Literal)
-          .forEach(importLiteral => {
-            j(importLiteral).replaceWith(j.literal(newSource));
-          });
-      }
+      let importSpecifiers = root
+        .find(j.ImportDeclaration)
+        .find(j.ImportSpecifier)
+        .find(j.Identifier, { name: local });
+
+      let importDefaultSpecifiers = root
+        .find(j.ImportDeclaration)
+        .find(j.ImportDefaultSpecifier)
+        .find(j.Identifier, { name: local });
+
+      importSpecifiers.paths().forEach(updateSpecifiers);
+      importDefaultSpecifiers.paths().forEach(updateSpecifiers);
+    }
+
+    // second, update literal path
+    if (source !== replacementSource) {
+      root
+        .find(j.ImportDeclaration, {
+          source: {
+            type: 'Literal',
+            value: source
+          }
+        })
+        .find(j.Literal)
+        .forEach(importLiteral => {
+          j(importLiteral).replaceWith(j.literal(replacementSource));
+        });
     }
   }
 
@@ -239,21 +242,24 @@ function transform(file, api /*, options*/) {
         let existingNodePath = uniqueImports[value];
 
         specifiers.forEach(spec => {
-          let local = spec.local;
-          let imported = spec.imported;
+          let { imported, local } = spec;
 
           if (spec.type === 'ImportDefaultSpecifier') {
             let specifier = j.importDefaultSpecifier(j.identifier(local.name));
             // default imports go at front
             existingNodePath.get('specifiers').unshift(specifier);
-          } else if (imported && local) {
-            let specifier = j.importSpecifier(
-              j.identifier(imported.name),
-              j.identifier(local.name)
-            );
-            existingNodePath.get('specifiers').push(specifier);
-          } else {
-            let specifier = j.importSpecifier(j.identifier(local.name));
+          } else if (spec.type === 'ImportSpecifier') {
+            let specifier;
+
+            if (imported && local) {
+              specifier = j.importSpecifier(
+                j.identifier(imported.name),
+                j.identifier(local.name)
+              );
+            } else {
+              specifier = j.importSpecifier(j.identifier(imported.name));
+            }
+
             existingNodePath.get('specifiers').push(specifier);
           }
         });
