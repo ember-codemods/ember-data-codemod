@@ -725,10 +725,10 @@
     exec-sh "^0.3.2"
     minimist "^1.2.0"
 
-"@ember-data/rfc395-data@^0.0.3":
-  version "0.0.3"
-  resolved "https://registry.yarnpkg.com/@ember-data/rfc395-data/-/rfc395-data-0.0.3.tgz#5794bb68bea0b92ab302f53a5d03f7f80c2d8d29"
-  integrity sha512-sO7OBCAVRq3tCTktCe6z1N435+m0kS92MnD5rj1ayijec4NhZidoJQoVfcnqKj/PcK0hkrgBm6yyXs1MK8rhaA==
+"@ember-data/rfc395-data@^0.0.4":
+  version "0.0.4"
+  resolved "https://registry.yarnpkg.com/@ember-data/rfc395-data/-/rfc395-data-0.0.4.tgz#ecb86efdf5d7733a76ff14ea651a1b0ed1f8a843"
+  integrity sha512-tGRdvgC9/QMQSuSuJV45xoyhI0Pzjm7A9o/MVVA3HakXIImJbbzx/k/6dO9CUEQXIyS2y0fW6C1XaYOG7rY0FQ==
 
 "@jest/console@^24.7.1":
   version "24.7.1"
