@@ -3,33 +3,25 @@ module.exports = {
   extends: ['eslint:recommended', 'plugin:node/recommended', 'prettier'],
   plugins: ['prettier', 'node'],
   parserOptions: {
-    ecmaVersion: 2017,
+    ecmaVersion: 2017
   },
   env: {
-    node: true,
+    node: true
   },
   rules: {
-    'prettier/prettier': ['error', {singleQuote: true}],
+    'prettier/prettier': ['error', { singleQuote: true }]
   },
   overrides: [
     {
-      files: ['bin/**/*.js'],
-
-      rules: {
-        'no-console': ['off'],
-        'no-process-exit': ['off']
-      },
-    },
-    {
-      files: ['__tests__/*.test.js'],
+      files: ['transforms/**/test.js'],
       plugins: ['jest'],
 
       // can't use `extends` in nested config :sob:
       rules: require('eslint-plugin-jest').configs.recommended.rules,
 
       env: {
-        jest: true,
-      },
-    },
-  ],
+        jest: true
+      }
+    }
+  ]
 };

@@ -20,7 +20,7 @@ module.exports = transform;
  */
 function transform(file, api /*, options*/) {
   let source = file.source;
-  let j = api.jscodeshift;
+  const j = api.jscodeshift;
 
   let root = j(source);
 
