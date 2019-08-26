@@ -14,8 +14,8 @@
     "ember-data"
   ],
   "dependencies": {
-    "codemod-cli": "^1.1.0",
-    "@ember-data/rfc395-data": "^0.0.4"
+    "@ember-data/rfc395-data": "^0.0.4",
+    "codemod-cli": "^2.0.0"
   },
   "devDependencies": {
     "eslint": "^6.1.0",
