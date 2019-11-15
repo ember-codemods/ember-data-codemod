@@ -166,7 +166,9 @@ function transform(file, api /*, options*/) {
     const mappingName = imported === 'default' ? local : imported;
     let foundMapping = mappings[mappingName];
 
-    if (!foundMapping) {
+    let isEmberDataModule =
+      source === 'ember-data' || source.startsWith('ember-data/');
+    if (!foundMapping || !isEmberDataModule) {
       return;
     }
 
