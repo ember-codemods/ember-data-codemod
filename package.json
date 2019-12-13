@@ -11,7 +11,8 @@
   },
   "keywords": [
     "codemod-cli",
-    "ember-data"
+    "ember-data",
+    "ember-codemod"
   ],
   "dependencies": {
     "@ember-data/rfc395-data": "^0.0.4",
