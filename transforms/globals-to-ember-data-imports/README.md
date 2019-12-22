@@ -19,7 +19,7 @@ export default DS.Model.extend({
 ```
 into:
 ```
-import Model, { attr as thing } from "@ember-data/model";
+import Model, { attr as thing } from '@ember-data/model';
 
 export default Model.extend({
   shoe: thing('number'),
