@@ -57,4 +57,5 @@ This codemod uses [`jscodeshift`](https://github.com/facebook/jscodeshift)
 
 ## Links
 
-[RFC 395: @ember-data packages](https://github.com/emberjs/rfcs/pull/395).
+* [RFC 395: @ember-data packages](https://github.com/emberjs/rfcs/pull/395)
+* [ember/use-ember-data-rfc-395-imports](https://github.com/ember-cli/eslint-plugin-ember/blob/master/docs/rules/use-ember-data-rfc-395-imports.md) lint rule
