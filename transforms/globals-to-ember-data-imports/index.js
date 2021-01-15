@@ -10,7 +10,7 @@ const ERROR_WARNING = 1;
 const MISSING_GLOBAL_WARNING = 2;
 
 const OPTS = {
-  quote: 'single'
+  quote: 'single',
 };
 
 module.exports = transformer;
@@ -95,7 +95,7 @@ function transformer(file, api /*, options*/) {
     // because jscodeshift doesn't give us a cleanup hook when everything is done
     // to parse these files. (This is what the environment variable is checking.)
     if (warnings.length && process.env.EMBER_DATA_CODEMOD) {
-      warnings.forEach(warning => {
+      warnings.forEach((warning) => {
         fs.appendFileSync(LOG_FILE, JSON.stringify(warning) + '\n');
       });
     }
@@ -125,12 +125,12 @@ function transformer(file, api /*, options*/) {
     return root.find(j.ImportDeclaration, {
       specifiers: [
         {
-          type: 'ImportDefaultSpecifier'
-        }
+          type: 'ImportDefaultSpecifier',
+        },
       ],
       source: {
-        value: 'ember-data'
-      }
+        value: 'ember-data',
+      },
     });
   }
 
@@ -152,8 +152,8 @@ function transformer(file, api /*, options*/) {
   function findUsageOfDSGlobal(root, globalDS) {
     let dsUsages = root.find(j.MemberExpression, {
       object: {
-        name: globalDS
-      }
+        name: globalDS,
+      },
     });
 
     return dsUsages.filter(isDSGlobal(globalDS)).paths();
@@ -177,12 +177,12 @@ function transformer(file, api /*, options*/) {
     const {
       imported: replacementImported,
       local: replacementLocal,
-      source: replacementSource
+      source: replacementSource,
     } = foundMapping;
 
     // first, update specifier if different than what mapping says it should be
     if (imported !== replacementImported) {
-      const updateSpecifiers = path => {
+      const updateSpecifiers = (path) => {
         let specifier;
 
         if (replacementImported === 'default') {
@@ -215,11 +215,11 @@ function transformer(file, api /*, options*/) {
         .find(j.ImportDeclaration, {
           source: {
             type: 'StringLiteral',
-            value: source
-          }
+            value: source,
+          },
         })
         .find(j.Literal)
-        .forEach(importLiteral => {
+        .forEach((importLiteral) => {
           j(importLiteral).replaceWith(j.literal(replacementSource));
         });
     }
@@ -232,7 +232,7 @@ function transformer(file, api /*, options*/) {
   function cleanupDuplicateLiteralPaths() {
     const uniqueImports = {};
 
-    root.find(j.ImportDeclaration).forEach(nodePath => {
+    root.find(j.ImportDeclaration).forEach((nodePath) => {
       let node = nodePath.node;
       let value = node.source && node.source.value;
 
@@ -245,7 +245,7 @@ function transformer(file, api /*, options*/) {
         let specifiers = node.specifiers;
         let existingNodePath = uniqueImports[value];
 
-        specifiers.forEach(spec => {
+        specifiers.forEach((spec) => {
           let { imported, local } = spec;
 
           if (spec.type === 'ImportDefaultSpecifier') {
@@ -294,7 +294,7 @@ function transformer(file, api /*, options*/) {
     // Keep track of the nested properties off of the DS namespace,
     // const { Model } = DS;
     let globalDSWithNestedProperties = [globalDS];
-    let uses = root.find(j.VariableDeclarator, node => {
+    let uses = root.find(j.VariableDeclarator, (node) => {
       if (j.Identifier.check(node.init)) {
         if (includes(globalDSWithNestedProperties, node.init.name)) {
           // We've found a DS global, or one of its nested properties.
@@ -314,7 +314,7 @@ function transformer(file, api /*, options*/) {
   }
 
   function resolvePendingGlobals() {
-    Object.keys(pendingGlobals).forEach(key => {
+    Object.keys(pendingGlobals).forEach((key) => {
       let pendingGlobal = pendingGlobals[key];
       const parentPath = pendingGlobal.pattern.parentPath;
       if (!pendingGlobal.hasMissingGlobal) {
@@ -327,7 +327,7 @@ function transformer(file, api /*, options*/) {
 
   function getIdentifierProperties(node) {
     let identifierProperties = [];
-    node.id.properties.forEach(property => {
+    node.id.properties.forEach((property) => {
       if (j.Identifier.check(property.value)) {
         identifierProperties.push(property.key.name);
       }
@@ -384,7 +384,7 @@ function transformer(file, api /*, options*/) {
         pendingGlobals[pattern.node.name] = {
           pattern,
           dsPath,
-          hasMissingGlobal: thisPatternHasMissingGlobal
+          hasMissingGlobal: thisPatternHasMissingGlobal,
         };
       }
     } else if (j.ObjectPattern.check(pattern.node)) {
@@ -442,12 +442,12 @@ function transformer(file, api /*, options*/) {
    * `DS` identifier used in the MemberExpression is actually replaceable.
    */
   function findReplacement(mappings, namespace) {
-    return function(path) {
+    return function (path) {
       // Expand the full set of property lookups. For example, we don't want
       // just "Ember.computed"—we want "Ember.computed.or" as well.
       let candidates = expandMemberExpressions(path);
       if (namespace) {
-        candidates = candidates.map(expression => {
+        candidates = candidates.map((expression) => {
           let path = expression[0];
           let propertyPath = expression[1];
           return [path, `${namespace}.${propertyPath}`];
@@ -462,7 +462,7 @@ function transformer(file, api /*, options*/) {
       //
       // We'll go through these to find the most specific candidate that matches
       // our global->ES6 map.
-      let found = candidates.find(expression => {
+      let found = candidates.find((expression) => {
         let propertyPath = expression[1];
         return propertyPath in mappings;
       });
@@ -499,7 +499,7 @@ function transformer(file, api /*, options*/) {
       dsPath,
       lineNumber,
       file.path,
-      context
+      context,
     ]);
   }
 
@@ -517,8 +517,8 @@ function transformer(file, api /*, options*/) {
 
   function applyReplacements(replacements) {
     replacements
-      .filter(r => !!r)
-      .forEach(replacement => {
+      .filter((r) => !!r)
+      .forEach((replacement) => {
         let local = replacement.mod.local;
         let nodePath = replacement.nodePath;
 
@@ -555,14 +555,14 @@ function transformer(file, api /*, options*/) {
   function updateOrCreateImportDeclarations(root, registry, mappings) {
     let body = root.get().value.program.body;
 
-    registry.modules.forEach(mod => {
+    registry.modules.forEach((mod) => {
       if (!mod.node) {
         let source = mod.source;
         let imported = mod.imported;
         let local = mod.local;
 
         let declaration = root.find(j.ImportDeclaration, {
-          source: { value: mod.source }
+          source: { value: mod.source },
         });
         if (declaration.size() > 0) {
           let specifier;
@@ -601,11 +601,11 @@ function transformer(file, api /*, options*/) {
   function findExistingModules(root) {
     let registry = new ModuleRegistry();
 
-    root.find(j.ImportDeclaration).forEach(mod => {
+    root.find(j.ImportDeclaration).forEach((mod) => {
       let node = mod.node;
       let source = node.source.value;
 
-      node.specifiers.forEach(spec => {
+      node.specifiers.forEach((spec) => {
         let isDefault = j.ImportDefaultSpecifier.check(spec);
 
         // Some cases like `import * as bar from "foo"` have neither a
@@ -662,7 +662,7 @@ function transformer(file, api /*, options*/) {
 
     // multiple variable names indicates a destructured import
     if (Array.isArray(local)) {
-      let variableIds = local.map(function(v) {
+      let variableIds = local.map(function (v) {
         return j.importSpecifier(j.identifier(v), j.identifier(v));
       });
 
@@ -685,7 +685,7 @@ function transformer(file, api /*, options*/) {
   }
 
   function isDSGlobal(name) {
-    return function(path) {
+    return function (path) {
       let localDS = !path.scope.isGlobal && path.scope.declares(name);
       return !localDS;
     };
