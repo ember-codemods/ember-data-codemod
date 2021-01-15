@@ -214,7 +214,7 @@ function transformer(file, api /*, options*/) {
       root
         .find(j.ImportDeclaration, {
           source: {
-            type: 'Literal',
+            type: 'StringLiteral',
             value: source
           }
         })
