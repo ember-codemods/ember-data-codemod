@@ -3,13 +3,13 @@ module.exports = {
   extends: ['eslint:recommended', 'plugin:node/recommended', 'prettier'],
   plugins: ['prettier', 'node'],
   parserOptions: {
-    ecmaVersion: 2017
+    ecmaVersion: 2017,
   },
   env: {
-    node: true
+    node: true,
   },
   rules: {
-    'prettier/prettier': ['error', { singleQuote: true }]
+    'prettier/prettier': ['error', { singleQuote: true }],
   },
   overrides: [
     {
@@ -20,8 +20,8 @@ module.exports = {
       rules: require('eslint-plugin-jest').configs.recommended.rules,
 
       env: {
-        jest: true
-      }
-    }
-  ]
+        jest: true,
+      },
+    },
+  ],
 };
