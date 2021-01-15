@@ -1,5 +1,7 @@
 'use strict';
 
+const { getParser } = require('codemod-cli').jscodeshift;
+
 const fs = require('fs');
 const MAPPINGS = require('@ember-data/rfc395-data');
 
@@ -11,16 +13,16 @@ const OPTS = {
   quote: 'single'
 };
 
-module.exports = transform;
+module.exports = transformer;
 
 /**
  * This is the entry point for this jscodeshift transform.
  * It scans JavaScript files that use the DS global and / or the old imports.
  * It updates them to use the module syntax from the proposed new RFC.
  */
-function transform(file, api /*, options*/) {
+function transformer(file, api /*, options*/) {
   let source = file.source;
-  const j = api.jscodeshift;
+  const j = getParser(api);
 
   let root = j(source);
 
@@ -212,7 +214,7 @@ function transform(file, api /*, options*/) {
       root
         .find(j.ImportDeclaration, {
           source: {
-            type: 'Literal',
+            type: 'StringLiteral',
             value: source
           }
         })
