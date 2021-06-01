@@ -162,10 +162,10 @@
     chalk "^2.0.0"
     js-tokens "^4.0.0"
 
-"@babel/parser@^7.1.0", "@babel/parser@^7.1.6", "@babel/parser@^7.12.11", "@babel/parser@^7.12.16", "@babel/parser@^7.12.7", "@babel/parser@^7.8.4":
-  version "7.13.4"
-  resolved "https://registry.yarnpkg.com/@babel/parser/-/parser-7.13.4.tgz#340211b0da94a351a6f10e63671fa727333d13ab"
-  integrity sha512-uvoOulWHhI+0+1f9L4BoozY7U5cIkZ9PgJqvb041d6vypgUmtVPG4vmGm4pSggjl8BELzvHyUeJSUyEMY6b+qA==
+"@babel/parser@^7.1.0", "@babel/parser@^7.1.6", "@babel/parser@^7.12.11", "@babel/parser@^7.12.7", "@babel/parser@^7.14.0", "@babel/parser@^7.8.4":
+  version "7.14.4"
+  resolved "https://registry.yarnpkg.com/@babel/parser/-/parser-7.14.4.tgz#a5c560d6db6cd8e6ed342368dea8039232cbab18"
+  integrity sha512-ArliyUsWDUqEGfWcmzpGUzNfLxTdTp6WU4IuP6QFSp9gGfWS6boxFCkJSJ/L4+RG8z/FnIU3WxCk6hPL9SSWeA==
 
 "@babel/plugin-proposal-class-properties@^7.1.0":
   version "7.5.0"
@@ -1349,10 +1349,10 @@ chalk@^3.0.0:
     ansi-styles "^4.1.0"
     supports-color "^7.1.0"
 
-chalk@^4.0.0, chalk@^4.1.0:
-  version "4.1.0"
-  resolved "https://registry.yarnpkg.com/chalk/-/chalk-4.1.0.tgz#4e14870a618d9e2edd97dd8345fd9d9dc315646a"
-  integrity sha512-qwx12AxXe2Q5xQ43Ac//I6v5aXTipYrSESdOgzrN+9XjgEpyjpKuvSGaN4qE93f7TQTlerQQ8S+EQ0EyDoVL1A==
+chalk@^4.0.0, chalk@^4.1.0, chalk@^4.1.1:
+  version "4.1.1"
+  resolved "https://registry.yarnpkg.com/chalk/-/chalk-4.1.1.tgz#c80b3fab28bf6371e6863325eee67e618b77e6ad"
+  integrity sha512-diHzdDKxcU+bAsUboHLPEDQiw0qEe0qd7SYUn3HgcFlWgbDcfLGswOHYeGrHKzG9z6UYf01d9VFMfZxPM1xZSg==
   dependencies:
     ansi-styles "^4.1.0"
     supports-color "^7.1.0"
@@ -1460,13 +1460,13 @@ co@^4.6.0:
   resolved "https://registry.yarnpkg.com/co/-/co-4.6.0.tgz#6ea6bdf3d853ae54ccb8e47bfa0bf3f9031fb184"
   integrity sha1-bqa989hTrlTMuOR7+gvz+QMfsYQ=
 
-codemod-cli@^3.1.2:
-  version "3.1.2"
-  resolved "https://registry.yarnpkg.com/codemod-cli/-/codemod-cli-3.1.2.tgz#01cd5f9487ea172f68799ad9701dc55beedea1a8"
-  integrity sha512-oaayOJaqpeYBufM7DOOCgxKuvWFxDWibUxbAOvi0zDsDEMy2B2Wux41bPU+74yAlN99xwUpTZDWdDBk613NLhw==
+codemod-cli@^3.2.0:
+  version "3.2.0"
+  resolved "https://registry.yarnpkg.com/codemod-cli/-/codemod-cli-3.2.0.tgz#994318b460e6abb47d8fe4b42115327cfedecb4c"
+  integrity sha512-5CnbFIS884yxAtS3jEoChJQ4u0MV3NgpN7SMaRol9Y8CgYTIihaKADejLw1KCBxd8DgDkPnoNt7KzWW1ysSeVw==
   dependencies:
-    "@babel/parser" "^7.12.16"
-    chalk "^4.1.0"
+    "@babel/parser" "^7.14.0"
+    chalk "^4.1.1"
     common-tags "^1.8.0"
     ember-template-recast "^4.1.4"
     execa "^5.0.0"
