@@ -300,9 +300,8 @@ function transformer(file, api /*, options*/) {
           // We've found a DS global, or one of its nested properties.
           // Add it to the uses, and add its properties to the list of nested properties
           const identifierProperties = getIdentifierProperties(node);
-          globalDSWithNestedProperties = globalDSWithNestedProperties.concat(
-            identifierProperties
-          );
+          globalDSWithNestedProperties =
+            globalDSWithNestedProperties.concat(identifierProperties);
           return true;
         }
       } else if (j.MemberExpression.check(node.init)) {
