@@ -30,7 +30,7 @@
     "eslint-plugin-jest": "^24.5.0",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-prettier": "^3.4.1",
-    "jest": "^27.2.4",
+    "jest": "^28.1.2",
     "lerna-changelog": "^2.1.0",
     "prettier": "^2.4.1"
   },
